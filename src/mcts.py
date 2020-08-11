@@ -42,26 +42,19 @@ class Node():
 
 	def getExplorationTerm(self):
 
-		if self.totalSimulations == 0:
-			return inf
-		return sqrt(log(self.parent.totalSimulations)/self.totalSimulations)
+		return sqrt(log(self.parent.totalSimulations)/(self.totalSimulations or 1))
 
 	def getExploitationTerm(self):
 
-		if self.totalSimulations == 0:
-			return inf
-		return self.score/self.totalSimulations
+		return self.score/(self.totalSimulations or 1)
 
-	def getSelectionPriority(self, C):
-
-		return C*self.getExplorationTerm() + self.getExploitationTerm()
 
 class MCTS():
 	
-	def __init__(self, symbol, explorationConstant=sqrt(2), compTime=2):
+	def __init__(self, symbol, C=sqrt(2), compTime=2):
 
 		self.symbol = symbol
-		self.explorationConstant = explorationConstant
+		self.C = C
 		self.compTime = compTime # In seconds
 		self.opponentMap = {
 			'X': 'O',
@@ -99,28 +92,12 @@ class MCTS():
 			return currNode
 
 		# Selecting best child based on exploration Term and exploitation term
-		bestChild = None
 		if symbol == self.symbol:
-			bestScore = -inf
+			sortedChildren = sorted(currNode.children, key=lambda child: child.getExploitationTerm() + self.C*child.getExplorationTerm(), reverse=True)
 		else:
-			bestScore = inf
-		
-		for childNode in currNode.children:
-			childScore = childNode.getSelectionPriority(self.explorationConstant)
-			
-			if childScore == inf: # Not explored node highest priority for both maximizer and minimizer
-				bestChild = childNode
-				break
+			sortedChildren = sorted(currNode.children, key=lambda child: -child.getExploitationTerm() + self.C*child.getExplorationTerm(), reverse=True)
 
-			if symbol == self.symbol and childScore > bestScore:
-				bestScore = childScore
-				bestChild = childNode
-
-			if symbol != self.symbol and childScore < bestScore:
-				bestScore = childScore
-				bestChild = childNode 
-
-		return self.selection(bestChild, self.opponentMap[symbol])
+		return self.selection(sortedChildren[0], self.opponentMap[symbol])
 
 	def getMove(self, board, prevMove):
 

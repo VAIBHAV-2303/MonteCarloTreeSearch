@@ -24,7 +24,7 @@ print("Please decide player1")
 print("1. MCTS\n2. Human\n3. Random")
 choice = input()
 if choice == '1':
-	p1 = MCTS('X', compTime=1)
+	p1 = MCTS('X', compTime=0.1)
 elif choice == '2':
 	p1 = Human('X')
 else:
